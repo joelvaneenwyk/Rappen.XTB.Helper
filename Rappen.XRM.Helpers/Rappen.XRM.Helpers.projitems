@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\BagExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\ContextExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\EntityExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\Exception.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\SimplyTokensExtensions.cs" />
@@ -19,6 +20,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\ServiceExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\LCGConstsView.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\StringConverters.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\QueryExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\XmlExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FetchXML\Attribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FetchXML\Condition.cs" />
@@ -36,6 +38,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Interfaces\IDefinitionSavable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interfaces\ILogger.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Plugin\CanaryTracer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Plugin\ContextEntity.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Plugin\Enums.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Plugin\PluginBag.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Plugin\PluginBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Plugin\PluginLogger.cs" />

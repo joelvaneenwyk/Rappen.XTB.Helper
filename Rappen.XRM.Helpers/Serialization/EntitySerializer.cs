@@ -1,10 +1,10 @@
 ﻿using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Metadata;
+using Rappen.XRM.Helpers.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Xml;
 
 namespace Rappen.XRM.Helpers.Serialization
@@ -12,6 +12,19 @@ namespace Rappen.XRM.Helpers.Serialization
     public class EntitySerializer
     {
         private static string guidtemplate = "FFFFEEEEDDDDCCCCBBBBAAAA99998888";
+        private enum AccessRightsMask
+        {
+            None = 0,
+            Read = 1,
+            Write = 2,
+            Append = 4,
+            AppendTo = 16,
+            Create = 32,
+            Delete = 65536,
+            Share = 262144,
+            Assign = 524288,
+            Inherited = 134217728
+        }
 
         public static XmlDocument Serialize(Entity entity, XmlNode parent, SerializationStyle style)
         {
@@ -447,6 +460,57 @@ namespace Rappen.XRM.Helpers.Serialization
             else if (attribute is bool boolValue)
             {
                 return (GetBooleanLabel(meta, boolValue));
+            }
+            else if (meta.IsPOA() && attribute is int accessmask)
+            {
+                var listaccess = new List<AccessRightsMask>();
+                if ((accessmask & (int)AccessRightsMask.Read) == (int)AccessRightsMask.Read)
+                {
+                    listaccess.Add(AccessRightsMask.Read);
+                }
+                if ((accessmask & (int)AccessRightsMask.Create) == (int)AccessRightsMask.Create)
+                {
+                    listaccess.Add(AccessRightsMask.Create);
+                }
+                if ((accessmask & (int)AccessRightsMask.Write) == (int)AccessRightsMask.Write)
+                {
+                    listaccess.Add(AccessRightsMask.Write);
+                }
+                if ((accessmask & (int)AccessRightsMask.Delete) == (int)AccessRightsMask.Delete)
+                {
+                    listaccess.Add(AccessRightsMask.Delete);
+                }
+                if ((accessmask & (int)AccessRightsMask.Append) == (int)AccessRightsMask.Append)
+                {
+                    listaccess.Add(AccessRightsMask.Append);
+                }
+                if ((accessmask & (int)AccessRightsMask.AppendTo) == (int)AccessRightsMask.AppendTo)
+                {
+                    listaccess.Add(AccessRightsMask.AppendTo);
+                }
+                if ((accessmask & (int)AccessRightsMask.Share) == (int)AccessRightsMask.Share)
+                {
+                    listaccess.Add(AccessRightsMask.Share);
+                }
+                if ((accessmask & (int)AccessRightsMask.Assign) == (int)AccessRightsMask.Assign)
+                {
+                    listaccess.Add(AccessRightsMask.Assign);
+                }
+                if ((accessmask & (int)AccessRightsMask.Inherited) == (int)AccessRightsMask.Inherited)
+                {
+                    listaccess.Add(AccessRightsMask.Inherited);
+                }
+                var result = string.Join(", ", listaccess.Select(m => m.ToString()));
+                var knownmasksum = listaccess.Select(m => (int)m).Sum();
+                if (knownmasksum != accessmask)
+                {
+                    if (!string.IsNullOrEmpty(result))
+                    {
+                        result += ", ";
+                    }
+                    result += $"{accessmask - knownmasksum}";
+                }
+                return result;
             }
             return string.Format("{0:" + format + "}", attribute);
         }

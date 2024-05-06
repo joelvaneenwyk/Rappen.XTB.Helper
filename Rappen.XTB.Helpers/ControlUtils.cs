@@ -1,5 +1,6 @@
 ﻿namespace Rappen.XTB.Helpers
 {
+    using Microsoft.Xrm.Sdk.Metadata;
     using Rappen.XRM.Helpers.Interfaces;
     using Rappen.XTB.Helpers.Interfaces;
     using System;
@@ -13,7 +14,7 @@
         {
             var tags = control.Tag != null ? control.Tag.ToString().Split('|') : new string[] { };
             attribute = tags.Length > 0 ? tags[0] : "";
-            required = tags.Length > 1 ? bool.Parse(tags[1]) : false;
+            required = tags.Length > 1 && bool.Parse(tags[1]);
             defaultvalue = tags.Length > 2 ? tags[2] : control is CheckBox ? "false" : "";
             return !string.IsNullOrWhiteSpace(attribute);
         }
@@ -35,24 +36,24 @@
         public static string GetValueFromControl(Control control)
         {
             var result = "";
-            if (control is CheckBox)
+            if (control is CheckBox cb)
             {
-                result = ((CheckBox)control).Checked ? "true" : "false";
+                result = cb.Checked ? "true" : "false";
             }
-            else if (control is TextBox)
+            else if (control is TextBox tx)
             {
-                result = ((TextBox)control).Text;
+                result = tx.Text;
             }
-            else if (control is ComboBox)
+            else if (control is ComboBox cb2)
             {
-                var item = ((ComboBox)control).SelectedItem;
-                if (item is IXRMControlItem)
+                var item = cb2.SelectedItem;
+                if (item is IXRMControlItem ci)
                 {
-                    result = ((IXRMControlItem)item).GetValue();
+                    result = ci.GetValue();
                 }
                 else
                 {
-                    result = ((ComboBox)control).Text;
+                    result = cb2.Text;
                 }
             }
             return result;
@@ -64,18 +65,15 @@
             {
                 return null;
             }
-            Dictionary<string, string> collection = new Dictionary<string, string>();
+            var collection = new Dictionary<string, string>();
 
             foreach (Control control in controls.OfType<Control>().OrderBy(y => y.TabIndex))
             {
                 if (control.Tag != null)
                 {
-                    string attribute;
-                    bool required;
-                    string defaultvalue;
-                    if (GetControlDefinition(control, out attribute, out required, out defaultvalue))
+                    if (GetControlDefinition(control, out string attribute, out bool required, out string defaultvalue))
                     {
-                        var value = ControlUtils.GetValueFromControl(control);
+                        var value = GetValueFromControl(control);
                         if (validate && required && string.IsNullOrEmpty(value))
                         {
                             throw new ArgumentNullException(attribute, "Field cannot be empty");
@@ -105,9 +103,24 @@
             }
             controls.OfType<Control>().Where(y => y.Tag != null).OrderBy(y => y.TabIndex).ToList().ForEach(c => FillControl(collection, c, saveable));
             controls.OfType<Panel>().OrderBy(p => p.TabIndex).ToList().ForEach(p => FillControls(collection, p.Controls, saveable));
+            controls.OfType<GroupBox>().OrderBy(g => g.TabIndex).ToList().ForEach(g => FillControls(collection, g.Controls, saveable));
         }
 
-        class TextBoxEventHandler
+        public static string GetLayoutXML(EntityMetadata entitymeta, Dictionary<string, int> cellsFromLayoutXML)
+        {
+            if (entitymeta == null || cellsFromLayoutXML == null)
+            {
+                return string.Empty;
+            }
+            return $@"<grid name='resultset' object='{entitymeta?.ObjectTypeCode}' jump='{entitymeta?.PrimaryNameAttribute}' select='1' icon='1' preview='1'>
+  <row name='result' id='
+            {entitymeta?.PrimaryIdAttribute}'>
+    {string.Join("\n    ", cellsFromLayoutXML?.Select(c => $"<cell name='{c.Key}' width='{c.Value}'/>"))}
+  </row>
+</grid>";
+        }
+
+        private class TextBoxEventHandler
         {
             private readonly TextBox txt;
             private readonly IDefinitionSavable saveable;
@@ -143,7 +156,7 @@
             }
         }
 
-        class ComboBoxEventHandler
+        private class ComboBoxEventHandler
         {
             private readonly ComboBox cmb;
             private readonly IDefinitionSavable saveable;
@@ -194,7 +207,7 @@
 
         public static void FillControl(Dictionary<string, string> collection, Control control, IDefinitionSavable saveable)
         {
-            if (control.Tag != null && GetControlDefinition(control, out string attribute, out bool required, out string defaultvalue))
+            if (control.Tag != null && control.Tag.ToString() != "uiname" && GetControlDefinition(control, out string attribute, out bool required, out string defaultvalue))
             {
                 if (!collection.TryGetValue(attribute, out string value))
                 {
@@ -219,35 +232,37 @@
                 }
                 else if (control is ComboBox cmb)
                 {
-                    object selitem = null;
-                    foreach (var item in cmb.Items)
-                    {
-                        if (item is IXRMControlItem)
-                        {
-                            if (((IXRMControlItem)item).GetValue() == value)
-                            {
-                                selitem = item;
-                                break;
-                            }
-                        }
-                    }
-                    if (selitem != null)
-                    {
-                        cmb.SelectedItem = selitem;
-                    }
-                    else if (value != null && cmb.Items.IndexOf(value) >= 0)
-                    {
-                        cmb.SelectedItem = value;
-                    }
-                    else
-                    {
-                        cmb.Text = value;
-                    }
-                    if (saveable != null)
-                    {
-                        new ComboBoxEventHandler(cmb, saveable).Attach();
-                    }
+                    SetComboBoxValue(cmb, value, saveable);
                 }
+            }
+        }
+
+        public static void SetComboBoxValue(ComboBox cmb, string value, IDefinitionSavable saveable = null)
+        {
+            object selitem = null;
+            foreach (var item in cmb.Items)
+            {
+                if (item is IXRMControlItem xi && xi.GetValue() == value)
+                {
+                    selitem = item;
+                    break;
+                }
+            }
+            if (selitem != null)
+            {
+                cmb.SelectedItem = selitem;
+            }
+            else if (value != null && cmb.Items.IndexOf(value) >= 0)
+            {
+                cmb.SelectedItem = value;
+            }
+            else
+            {
+                cmb.Text = value;
+            }
+            if (saveable != null)
+            {
+                new ComboBoxEventHandler(cmb, saveable).Attach();
             }
         }
     }

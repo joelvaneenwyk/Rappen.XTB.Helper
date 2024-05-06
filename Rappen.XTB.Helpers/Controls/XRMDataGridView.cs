@@ -21,6 +21,7 @@ namespace Rappen.XTB.Helpers.Controls
 
         private IOrganizationService organizationService;
         private IEnumerable<Entity> entities;
+        private EntityMetadata entitymeta;
         private bool autoRefresh = true;
         private bool showFriendlyNames = false;
         private bool showBothNames = false;
@@ -35,8 +36,7 @@ namespace Rappen.XTB.Helpers.Controls
         private bool showAllColumnsInColumnOrder = false;
         private bool showColumnsNotInColumnOrder = true;
         private DataGridViewColumn[] designedColumns;
-        private string layoutxml;
-        private Dictionary<string, int> cellsFromLayoutXML;
+        private Dictionary<string, int> columnswidths;
         private string sortColumn;
         private ListSortDirection sortDirection = ListSortDirection.Ascending;
 
@@ -64,6 +64,7 @@ namespace Rappen.XTB.Helpers.Controls
             CellLeave += HandleCellLeave;
             CellMouseEnter += HandleCellMouseEnter;
             CellMouseLeave += HandleCellMouseLeave;
+            ColumnWidthChanged += HandleColumnWidthChanged;
         }
 
         #endregion Constructor
@@ -120,7 +121,7 @@ namespace Rappen.XTB.Helpers.Controls
                 {
                     throw new ArgumentException("DataSource can only contain entities of the same type.");
                 }
-
+                entitymeta = organizationService.GetEntity(entities?.FirstOrDefault(e => !string.IsNullOrEmpty(e.LogicalName))?.LogicalName);
                 if (designedColumnsDetermined && designedColumnsUsed && designedColumns != null)
                 {
                     foreach (var col in designedColumns)
@@ -143,11 +144,10 @@ namespace Rappen.XTB.Helpers.Controls
         [Browsable(false)]
         public string LayoutXML
         {
-            get { return layoutxml; }
+            get => ControlUtils.GetLayoutXML(entitymeta, columnswidths);
             set
             {
-                layoutxml = value;
-                cellsFromLayoutXML = GetCellsFromLayoutXML(layoutxml);
+                columnswidths = GetColumnsWidthsFromLayoutXML(value);
                 if (entities != null && autoRefresh)
                 {
                     Refresh();
@@ -316,6 +316,7 @@ namespace Rappen.XTB.Helpers.Controls
                 }
             }
         }
+
         [Category("Rappen XRM")]
         [DefaultValue(true)]
         [Description("Set this to show the id of each record first in the grid.")]
@@ -358,6 +359,8 @@ namespace Rappen.XTB.Helpers.Controls
         [DefaultValue(false)]
         [Description("Set this to give EntityReference cells a clickable appearance.")]
         public bool EntityReferenceClickable { get; set; } = false;
+
+        public bool SettingsWidths { get; private set; } = false;
 
         #endregion Published properties
 
@@ -507,11 +510,18 @@ namespace Rappen.XTB.Helpers.Controls
         {
             if (entities != null)
             {
-                var cols = GetTableColumns(entities);
-                var data = GetDataTable(entities, cols);
-                BindData(data);
-                ArrangeColumns();
-                FixColumnsFromLayout();
+                try
+                {
+                    var cols = GetTableColumns(entities);
+                    var data = GetDataTable(entities, cols);
+                    BindData(data);
+                    ArrangeColumns();
+                    SetIndexAndWidths();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Oops.\nUnexpected error during refresh of {this.Name}.\n\nJust try again, please.\nToo many of these messages? Create an issue so Jonas can try again to fix this error.\n\n{ex.Message}");
+                }
             }
             base.Refresh();
         }
@@ -654,6 +664,18 @@ namespace Rappen.XTB.Helpers.Controls
             GetXRMRecordEventArgs(e).OnRecordEvent(this, RecordMouseLeave);
         }
 
+        private void HandleColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
+        {
+            if (SettingsWidths)
+            {
+                return;
+            }
+            columnswidths = Columns.Cast<DataGridViewColumn>()
+                .Where(c => !c.Name.StartsWith("#") && !c.Name.EndsWith("|both") && c.Visible && c.Width > 5)
+                .OrderBy(c => c.DisplayIndex)
+                .ToDictionary(c => c.Name, c => c.Width);
+        }
+
         #endregion Private event handler methods
 
         #region Private methods
@@ -662,7 +684,6 @@ namespace Rappen.XTB.Helpers.Controls
         {
             var entity = GetXRMEntity(e.RowIndex);
             var attribute = e.ColumnIndex >= 0 ? Columns[e.ColumnIndex].Name : string.Empty;
-            //            var args = new XRMRecordEventArgs(e.ColumnIndex, e.RowIndex, entity, attribute);
             var args = new XRMRecordEventArgs(entity, attribute);
             return args;
         }
@@ -680,7 +701,7 @@ namespace Rappen.XTB.Helpers.Controls
                     Columns.CopyTo(designedColumns, 0);
                 }
             }
-            if (designedColumnsUsed && cellsFromLayoutXML == null)
+            if (designedColumnsUsed && columnswidths == null)
             {
                 PopulateColumnsFromDesign(entities, columns);
             }
@@ -705,9 +726,27 @@ namespace Rappen.XTB.Helpers.Controls
                     var force = columnOrder.Contains(a) && (showAllColumnsInColumnOrder || entities.Any(e => e.Contains(a)));
 
                     AddColumnForAttribute(entities, columns, a, force, showFriendlyNames);
-                    if (showBothNames && organizationService.GetFriendlyAttributeIsNotAsRawValue(EntityName, a))
+                    if (showBothNames)
                     {
-                        AddColumnForAttribute(entities, columns, a, force, !showFriendlyNames);
+                        var rawentity = EntityName;
+                        var rawattribute = a;
+                        if (a.Contains("."))
+                        {
+                            var value = GetFirstValueForAttribute(entities, a);
+                            if (value != null)
+                            {
+                                var meta = organizationService.GetAttribute(EntityName, a, value);
+                                if (meta?.EntityLogicalName != null)
+                                {
+                                    rawentity = meta.EntityLogicalName;
+                                    rawattribute = meta.LogicalName;
+                                }
+                            }
+                        }
+                        if (organizationService.GetFriendlyAttributeIsNotAsRawValue(rawentity, rawattribute))
+                        {
+                            AddColumnForAttribute(entities, columns, a, force, !showFriendlyNames);
+                        }
                     }
                 });
             }
@@ -834,28 +873,45 @@ namespace Rappen.XTB.Helpers.Controls
                     //   as a different column to the ID of the record.
                     return;
                 }
-                if (friendlyname &&
-                   meta != null &&
-                   meta.DisplayName != null &&
-                   meta.DisplayName.UserLocalizedLabel != null)
+                var columnName = string.Empty;
+                if (friendlyname)
                 {
-                    dataColumn.Caption = meta.DisplayName.UserLocalizedLabel.Label;
-                    if (attribute.Contains("."))
+                    if (!attribute.Contains(".") && !attribute.Equals(meta?.LogicalName))
+                    {   // Should be an aliased attribute
+                        columnName = attribute;
+                    }
+                    else if (meta?.DisplayName?.UserLocalizedLabel?.Label is string label)
                     {
-                        if (dataColumn.ExtendedProperties.ContainsKey(_extendedMetaEntity) && dataColumn.ExtendedProperties[_extendedMetaEntity] is EntityMetadata aliasmeta)
+                        columnName = label;
+                        if (attribute.Contains("."))
                         {
-                            dataColumn.Caption += $" ({aliasmeta.DisplayName.UserLocalizedLabel.Label})";
-                        }
-                        else
-                        {
-                            dataColumn.Caption = attribute.Split('.')[0] + " " + dataColumn.Caption;
+                            if (dataColumn.ExtendedProperties.ContainsKey(_extendedMetaEntity) && dataColumn.ExtendedProperties[_extendedMetaEntity] is EntityMetadata aliasmeta)
+                            {
+                                columnName += $" ({aliasmeta.DisplayName.UserLocalizedLabel.Label})";
+                            }
+                            else
+                            {
+                                columnName = attribute.Split('.')[0] + " " + columnName;
+                            }
                         }
                     }
                 }
-                else
+                if (string.IsNullOrWhiteSpace(columnName) && meta?.LogicalName is string logicalname && !attribute.Contains("."))
                 {
-                    dataColumn.Caption = attribute;
+                    if (meta.EntityLogicalName is string entitylogicalname && entitylogicalname != entitymeta?.LogicalName)
+                    {
+                        columnName = entitylogicalname + "." + logicalname;
+                    }
+                    else
+                    {
+                        columnName = logicalname;
+                    }
                 }
+                if (string.IsNullOrWhiteSpace(columnName))
+                {
+                    columnName = attribute;
+                }
+                dataColumn.Caption = columnName;
                 columns.Add(dataColumn);
             }
         }
@@ -924,13 +980,14 @@ namespace Rappen.XTB.Helpers.Controls
                             }
                             if (column.GetFriendly())
                             {
-                                if (!ValueTypeIsFriendly(value) && GetAttributeMetadata(column) is AttributeMetadata meta)
+                                var format = column.ExtendedProperties["Format"] as string;
+                                if ((!ValueTypeIsFriendly(value) || col.IsPOA()) && GetAttributeMetadata(column) is AttributeMetadata meta)
                                 {
-                                    value = EntitySerializer.AttributeToString(value, meta, column.ExtendedProperties["Format"] as string);
+                                    value = EntitySerializer.AttributeToString(value, meta, format);
                                 }
                                 else
                                 {
-                                    value = EntitySerializer.AttributeToBaseType(value).ToString();
+                                    value = string.Format("{0:" + format + "}", EntitySerializer.AttributeToBaseType(value));
                                 }
                             }
                             else
@@ -988,9 +1045,12 @@ namespace Rappen.XTB.Helpers.Controls
                 {
                     type = datacolumn.ExtendedProperties[_originalType] as Type;
                 }
-                if (type == typeof(int) || type == typeof(decimal) || type == typeof(double) || type == typeof(Money) || (type == typeof(OptionSetValue) && !datacolumn.GetFriendly()))
+                if (datacolumn.ColumnName.IsPOA() != true || !datacolumn.GetFriendly())
                 {
-                    col.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+                    if (type == typeof(int) || type == typeof(decimal) || type == typeof(double) || type == typeof(Money) || (type == typeof(OptionSetValue) && !datacolumn.GetFriendly()))
+                    {
+                        col.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+                    }
                 }
                 if (datacolumn.ExtendedProperties.ContainsKey("Format"))
                 {
@@ -1018,17 +1078,18 @@ namespace Rappen.XTB.Helpers.Controls
 
         private void VerifySupportingColumn(string col)
         {
-            if (!Columns.Contains(col))
+            if (Columns.Contains(col))
             {
-                var newcol = new DataGridViewTextBoxColumn
-                {
-                    Name = col,
-                    DataPropertyName = col,
-                    HeaderText = col,
-                    ReadOnly = true
-                };
-                Columns.Add(newcol);
+                return;
             }
+            var newcol = new DataGridViewTextBoxColumn
+            {
+                Name = col,
+                DataPropertyName = col,
+                HeaderText = col,
+                ReadOnly = true
+            };
+            Columns.Add(newcol);
         }
 
         private void ArrangeColumns()
@@ -1053,7 +1114,7 @@ namespace Rappen.XTB.Helpers.Controls
             }
         }
 
-        private Dictionary<string, int> GetCellsFromLayoutXML(string layoutxml)
+        private Dictionary<string, int> GetColumnsWidthsFromLayoutXML(string layoutxml)
         {
             string GetCellName(XmlNode node)
             {
@@ -1065,56 +1126,63 @@ namespace Rappen.XTB.Helpers.Controls
             }
             int GetCellWidth(XmlNode node)
             {
-                if (node != null && node.Attributes != null && node.Attributes["width"] is XmlAttribute attr)
+                if (node != null && node.Attributes != null)
                 {
-                    if (int.TryParse(attr.Value, out int width))
+                    if (node.Attributes["ishidden"] is XmlAttribute attrhidden &&
+                        attrhidden.Value is string hidden)
+                    {
+                        hidden = hidden.ToLowerInvariant().Trim();
+                        return hidden == "1" || hidden == "true" ? 0 : 100;
+                    }
+                    if (node.Attributes["width"] is XmlAttribute attrwidth &&
+                        int.TryParse(attrwidth.Value, out var width))
                     {
                         return width;
                     }
                 }
-                return 0;
+                return 100;
             }
 
-            if (!string.IsNullOrEmpty(layoutxml))
+            if (!string.IsNullOrEmpty(layoutxml) && layoutxml.ToXml().SelectSingleNode("grid") is XmlElement grid)
             {
-                if (layoutxml.ToXml().SelectSingleNode("grid") is XmlElement grid)
-                {
-                    var cells = grid.SelectSingleNode("row")?
-                        .ChildNodes.Cast<XmlNode>()
-                        .Where(n => n.Name == "cell")
-                        .Select(c => new KeyValuePair<string, int>(GetCellName(c), GetCellWidth(c)))
-                        .ToDictionary(c => c.Key, c => c.Value);
-                    return cells?.Count > 0 ? cells : null;
-                }
+                var cells = grid.SelectSingleNode("row")?
+                    .ChildNodes.Cast<XmlNode>()
+                    .Where(n => n.Name == "cell")
+                    .Select(c => new KeyValuePair<string, int>(GetCellName(c), GetCellWidth(c)))
+                    .ToDictionary(c => c.Key, c => c.Value);
+                return cells?.Count > 0 ? cells : null;
             }
             return null;
         }
 
-        private void FixColumnsFromLayout()
+        private void SetIndexAndWidths()
         {
-            if (cellsFromLayoutXML != null)
+            if (columnswidths == null || designedColumnsUsed)
             {
-                var cellnames = cellsFromLayoutXML.Where(c => c.Value > 0).Select(c => c.Key);
-                cellnames.Where(c => !Columns.Contains(c)).ToList().ForEach(c => Columns.Add(c, c));
-                // First hidden all columns
-                Columns.Cast<DataGridViewColumn>().ToList().ForEach(c => c.Visible = false);
-                var display = 0;
-                foreach (var cell in cellsFromLayoutXML.Where(c => c.Value > 0))
+                return;
+            }
+            SettingsWidths = true;
+            var cellnames = columnswidths.Where(c => c.Value > 0).Select(c => c.Key);
+            cellnames.Where(c => !Columns.Contains(c)).ToList().ForEach(c => Columns.Add(c, c));
+            // First hidden all columns
+            Columns.Cast<DataGridViewColumn>().ToList().ForEach(c => c.Visible = false);
+            var display = 0;
+            foreach (var cell in columnswidths.Where(c => c.Value > 0))
+            {
+                if (Columns.Cast<DataGridViewColumn>().FirstOrDefault(c => c.Name == cell.Key) is DataGridViewColumn column)
                 {
-                    if (Columns.Cast<DataGridViewColumn>().FirstOrDefault(c => c.Name == cell.Key) is DataGridViewColumn column)
-                    {
-                        column.DisplayIndex = display++;
-                        column.Width = cell.Value;
-                        column.Visible = cell.Value > 0;
-                    }
-                    if (showBothNames && Columns.Cast<DataGridViewColumn>().FirstOrDefault(c => c.Name == cell.Key + "|both") is DataGridViewColumn columnboth)
-                    {
-                        columnboth.DisplayIndex = display++;
-                        columnboth.Width = cell.Value;
-                        columnboth.Visible = cell.Value > 0;
-                    }
+                    column.DisplayIndex = display++;
+                    column.Width = cell.Value;
+                    column.Visible = cell.Value > 0;
+                }
+                if (showBothNames && Columns.Cast<DataGridViewColumn>().FirstOrDefault(c => c.Name == cell.Key + "|both") is DataGridViewColumn columnboth)
+                {
+                    columnboth.DisplayIndex = display++;
+                    columnboth.Width = cell.Value;
+                    columnboth.Visible = cell.Value > 0;
                 }
             }
+            SettingsWidths = false;
         }
 
         #endregion Private methods
