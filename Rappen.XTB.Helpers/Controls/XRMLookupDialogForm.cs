@@ -3,7 +3,6 @@ using Rappen.XRM.Helpers.Extensions;
 using Rappen.XTB.Helpers.ControlItems;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.ServiceModel;
 using System.Windows.Forms;
