@@ -187,7 +187,7 @@
             }
             var value = entity[attribute];
             var metadata = service.GetAttribute(entity.LogicalName, attribute, value);
-            if (EntitySerializer.AttributeToBaseType(value) is DateTime dtvalue && (dtvalue).Kind == DateTimeKind.Utc)
+            if (EntitySerializer.AttributeToBaseType(value) is DateTime dtvalue && dtvalue.Kind == DateTimeKind.Utc)
             {
                 value = dtvalue.ToLocalTime();
             }

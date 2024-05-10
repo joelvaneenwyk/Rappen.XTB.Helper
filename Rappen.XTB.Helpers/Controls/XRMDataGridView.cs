@@ -974,7 +974,7 @@ namespace Rappen.XTB.Helpers.Controls
                         else if (entity.Contains(col) && entity[col] != null)
                         {
                             value = entity[col];
-                            if (EntitySerializer.AttributeToBaseType(value) is DateTime dtvalue && showLocalTimes && (dtvalue).Kind == DateTimeKind.Utc)
+                            if (EntitySerializer.AttributeToBaseType(value) is DateTime dtvalue && showLocalTimes && dtvalue.Kind == DateTimeKind.Utc)
                             {
                                 value = dtvalue.ToLocalTime();
                             }

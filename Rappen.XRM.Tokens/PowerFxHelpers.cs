@@ -111,13 +111,13 @@ namespace Rappen.XRM.Tokens
             string resultString = "";
 
             if (value is BlankValue)
-                resultString = (minimal ? "" : "Blank()");
+                resultString = minimal ? "" : "Blank()";
             else if (value is ErrorValue errorValue)
-                resultString = (/*minimal ? "<error>" :*/ "<Error: " + errorValue.Errors[0].Message + ">");
+                resultString = /*minimal ? "<error>" :*/"<Error: " + errorValue.Errors[0].Message + ">";
             else if (value is UntypedObjectValue)
-                resultString = (/*minimal ? "<untyped>" :*/ "<Untyped: Use Value, Text, Boolean, or other functions to establish the type>");
+                resultString = /*minimal ? "<untyped>" :*/"<Untyped: Use Value, Text, Boolean, or other functions to establish the type>";
             else if (value is StringValue str)
-                resultString = (minimal ? str.ToObject().ToString() : "\"" + str.ToObject().ToString().Replace("\"", "\"\"") + "\"");
+                resultString = minimal ? str.ToObject().ToString() : "\"" + str.ToObject().ToString().Replace("\"", "\"\"") + "\"";
             else if (value is RecordValue record)
             {
                 if (minimal)
@@ -211,7 +211,7 @@ namespace Rappen.XRM.Tokens
             else
                 throw new Exception("unexpected type in PrintResult");
 
-            return (resultString);
+            return resultString;
         }
     }
 }

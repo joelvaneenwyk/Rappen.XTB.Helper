@@ -286,7 +286,7 @@ namespace Rappen.XTB.Helpers.Controls
         }
 
         [Browsable(false)]
-        public Entity SelectedRecord => (SelectedItem is EntityItem item) ? item.Entity : null;
+        public Entity SelectedRecord => SelectedItem is EntityItem item ? item.Entity : null;
 
         public void RecordUpdated()
         {

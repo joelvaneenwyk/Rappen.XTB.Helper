@@ -108,7 +108,7 @@ namespace Rappen.XTB.Helpers.Controls
         }
 
         [Browsable(false)]
-        public AttributeMetadata SelectedAttribute => (SelectedItem is AttributeMetadataItem item) ? item.Metadata : null;
+        public AttributeMetadata SelectedAttribute => SelectedItem is AttributeMetadataItem item ? item.Metadata : null;
 
         #endregion Public Properties
 

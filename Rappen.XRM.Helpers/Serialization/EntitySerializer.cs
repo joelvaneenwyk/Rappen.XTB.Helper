@@ -459,7 +459,7 @@ namespace Rappen.XRM.Helpers.Serialization
             }
             else if (attribute is bool boolValue)
             {
-                return (GetBooleanLabel(meta, boolValue));
+                return GetBooleanLabel(meta, boolValue);
             }
             else if (meta.IsPOA() && attribute is int accessmask)
             {
@@ -580,7 +580,7 @@ namespace Rappen.XRM.Helpers.Serialization
             }
             else if (attribute is bool boolValue)
             {
-                return (GetBooleanLabel(meta, boolValue));
+                return GetBooleanLabel(meta, boolValue);
             }
             return attribute.ToString();
         }

@@ -75,7 +75,7 @@ namespace Rappen.XRM.Helpers.Extensions
 
                 default:
                     if (context.InputParameters.Contains(ParameterName.Target) &&
-                        (context.InputParameters[ParameterName.Target] is EntityReference))
+                        context.InputParameters[ParameterName.Target] is EntityReference)
                     {
                         return ((EntityReference)context.InputParameters[ParameterName.Target]).Id;
                     }

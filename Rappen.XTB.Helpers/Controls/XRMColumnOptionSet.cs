@@ -121,7 +121,7 @@ namespace Rappen.XTB.Helpers.Controls
         }
 
         [Browsable(false)]
-        public OptionMetadata SelectedOption => (SelectedItem is OptionMetadataItem item) ? item.Metadata : null;
+        public OptionMetadata SelectedOption => SelectedItem is OptionMetadataItem item ? item.Metadata : null;
 
         [Category("Rappen XRM")]
         public XRMRecordHost RecordHost
