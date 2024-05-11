@@ -1,66 +1,17 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{3E076ED5-2312-46BF-8883-F9885642A11C}</ProjectGuid>
+    <TargetFramework>net48</TargetFramework>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>ControlDesigner</RootNamespace>
-    <AssemblyName>ControlDesigner</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <Deterministic>true</Deterministic>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Crm.Sdk.Proxy, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Microsoft.CrmSdk.CoreAssemblies.9.0.2.29\lib\net462\Microsoft.Crm.Sdk.Proxy.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Xrm.Sdk, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Microsoft.CrmSdk.CoreAssemblies.9.0.2.29\lib\net462\Microsoft.Xrm.Sdk.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.DirectoryServices" />
-    <Reference Include="System.DirectoryServices.AccountManagement" />
     <Reference Include="System.IdentityModel" />
-    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Security" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.ServiceModel.Web" />
     <Reference Include="System.Web" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\ControlItems\EntityItem.cs">
@@ -73,33 +24,17 @@
       <Link>XRMColumnBool.cs</Link>
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="..\Controls\XRMColumnBool.designer.cs">
-      <Link>XRMColumnBool.designer.cs</Link>
-      <DependentUpon>XRMColumnBool.cs</DependentUpon>
-    </Compile>
     <Compile Include="..\Controls\XRMColumnDateTime.cs">
       <Link>XRMColumnDateTime.cs</Link>
       <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="..\Controls\XRMColumnDateTime.designer.cs">
-      <Link>XRMColumnDateTime.designer.cs</Link>
-      <DependentUpon>XRMColumnDateTime.cs</DependentUpon>
     </Compile>
     <Compile Include="..\Controls\XRMColumnLookup.cs">
       <Link>XRMColumnLookup.cs</Link>
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="..\Controls\XRMColumnLookup.Designer.cs">
-      <Link>XRMColumnLookup.Designer.cs</Link>
-      <DependentUpon>XRMColumnLookup.cs</DependentUpon>
-    </Compile>
     <Compile Include="..\Controls\XRMColumnNumber.cs">
       <Link>XRMColumnNumber.cs</Link>
       <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="..\Controls\XRMColumnNumber.designer.cs">
-      <Link>XRMColumnNumber.designer.cs</Link>
-      <DependentUpon>XRMColumnNumber.cs</DependentUpon>
     </Compile>
     <Compile Include="..\Controls\XRMControlException.cs">
       <Link>XRMControlException.cs</Link>
@@ -107,18 +42,6 @@
     <Compile Include="..\Controls\XRMDataGridView.cs">
       <Link>XRMDataGridView.cs</Link>
       <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="..\Controls\XRMDataGridView.designer.cs">
-      <Link>XRMDataGridView.designer.cs</Link>
-      <DependentUpon>XRMDataGridView.cs</DependentUpon>
-    </Compile>
-    <Compile Include="..\Controls\XRMLookupDialogForm.cs">
-      <Link>XRMLookupDialogForm.cs</Link>
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="..\Controls\XRMLookupDialogForm.designer.cs">
-      <Link>XRMLookupDialogForm.designer.cs</Link>
-      <DependentUpon>XRMLookupDialogForm.cs</DependentUpon>
     </Compile>
     <Compile Include="..\Controls\XRMRecordEventArgs.cs">
       <Link>XRMRecordEventArgs.cs</Link>
@@ -133,20 +56,21 @@
     <Compile Include="..\Interfaces\IXRMRecordControl.cs">
       <Link>IXRMRecordControl.cs</Link>
     </Compile>
-    <Compile Include="Program.cs" />
-    <EmbeddedResource Include="..\Controls\XRMDataGridView.resx">
-      <Link>XRMDataGridView.resx</Link>
-      <DependentUpon>XRMDataGridView.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="..\Controls\XRMLookupDialogForm.resx">
-      <Link>XRMLookupDialogForm.resx</Link>
-      <DependentUpon>XRMLookupDialogForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="README.md" />
+    <PackageReference Include="Microsoft.CrmSdk.CoreAssemblies" Version="9.0.2.52" />
+    <PackageReference Include="Microsoft.CrmSdk.Workflow" Version="9.0.2.52" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="Microsoft.PowerFx.Core" Version="1.2.0" />
+    <PackageReference Include="Microsoft.PowerFx.Interpreter" Version="1.2.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="System.Data.DataSetExtensions" Version="4.6.0-preview3.19128.7" />
+    <PackageReference Include="System.DirectoryServices" Version="9.0.0-preview.3.24172.9" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\XrmToolBox.Extensibility\XrmToolBox.Extensibility.csproj" />
+  </ItemGroup>
+  <Import Project="..\Rappen.XTB.Helpers.projitems" Label="Shared" />
+  <Import Project="..\..\Rappen.XRM.Tokens\Rappen.XRM.Tokens.projitems" Label="Shared" />
   <Import Project="..\..\Rappen.XRM.Helpers\Rappen.XRM.Helpers.projitems" Label="Shared" />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
