@@ -56,15 +56,15 @@
       },
       "System.Data.DataSetExtensions": {
         "type": "Direct",
-        "requested": "[4.6.0-preview3.19128.7, )",
-        "resolved": "4.6.0-preview3.19128.7",
-        "contentHash": "ZFJYYi41Wf4xlFKuuRUblw8yThgzBTYeZTs7eGU7sDiu+X+BmeIdT3pstCrmLpDyflDIBuKX1VYmBCGKo14h6w=="
+        "requested": "[4.5.0, )",
+        "resolved": "4.5.0",
+        "contentHash": "221clPs1445HkTBZPL+K9sDBdJRB8UN8rgjO3ztB0CQ26z//fmJXtlsr6whGatscsKGBrhJl5bwJuKSA8mwFOw=="
       },
       "System.DirectoryServices": {
         "type": "Direct",
-        "requested": "[9.0.0-preview.3.24172.9, )",
-        "resolved": "9.0.0-preview.3.24172.9",
-        "contentHash": "YSARfcXBCB6ZCGAediTRk3Rt5Qn1LxRAyNM3aaTIq2bjgyCS2sZRTXgHsOjPpR3D/h9hu4X2nCffajuQlmc3CQ==",
+        "requested": "[8.0.0, )",
+        "resolved": "8.0.0",
+        "contentHash": "7nit//efUTy1OsAKco2f02PMrwsR2S234N0dVVp84udC77YcvpOQDz5znAWMtgMWBzY1aRJvUW61jo/7vQRfXg==",
         "dependencies": {
           "System.IO.FileSystem.AccessControl": "5.0.0",
           "System.Security.AccessControl": "6.0.0",
